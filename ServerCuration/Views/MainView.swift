@@ -13,33 +13,32 @@ extension Color {
     static let customYellow = Color(red: 248 / 255, green: 183 / 255, blue: 74 / 255);
 }
 
-struct ServerView: View {
+struct ServerInfoText: View {
     var serverInfo: Server
     
     var body: some View {
         VStack(alignment: .leading) {
-            if !serverInfo.alias.isEmpty {
-                Text(serverInfo.alias).font(.headline).frame(height: 10)
-                Text("\(serverInfo.user)@\(serverInfo.host):\(serverInfo.port)")
-                    .font(.footnote)
-                    .frame(height: 10)
-            }
-            else {
-                Text("\(serverInfo.user)@\(serverInfo.host):\(serverInfo.port)")
-                    .font(.headline)
-                    .frame(height: 20)
+            let text: String = "\(serverInfo.user)@\(serverInfo.host):\(serverInfo.port)"
+            
+            NavigationLink(destination: ServerView(text: text)) {
+                if !serverInfo.alias.isEmpty {
+                    Text(serverInfo.alias)
+                        .font(.headline)
+                        .frame(height: 20)
+                }
+                else {
+                    Text(text)
+                        .font(.headline)
+                        .frame(height: 20)
+                }
             }
         }
         .padding()
     }
 }
 
-let serverList = [
-    Server(host: "192.168.54.1", port: "22", user: "admin"),
-    Server(host: "192.168.54.2", port: "22", user: "test", alias: "AliyunServer"),
-    Server(host: "192.168.54.3", port: "22", user: "customer"),
-    Server(host: "192.168.54.4", port: "22", user: "ubuntu")
-]
+
+let serverList = genServerList(serverList: readServerList())
 
 struct MainView: View {
     var body: some View {
@@ -60,20 +59,15 @@ struct MainView: View {
                 }
                 .padding(.top)
                 
-                List{
-                    ForEach(serverList, id: \.host) { server in
-                        ServerView(serverInfo: server)
+                List {
+                    ForEach(serverList, id: \.id) { server in
+                        ServerInfoText(serverInfo: server)
                     }
                 }
                 .onAppear {
                     for server in serverList {
                         print("\(server.user)@\(server.host):\(server.port)")
-                        
-                        // 写入 plist 文件
-                        saveServer(server: GenServerDict(server))
                     }
-                    
-                    readServerList()
                 }
                 
                 Button("Add new Server") {
